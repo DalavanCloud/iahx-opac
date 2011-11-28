@@ -1,65 +1,26 @@
 {foreach from=$result->response->docs item=doc}
-{if $doc->db|@contains:"MEDLINE"}
-    {assign var=refDB value=MEDLINE}
-    {assign var=refID value=$doc->id|substring_after:"-"}
-{else}
-    {if $doc->db[0] eq 'GHL'}
-        {assign var=refDB value=$doc->db[1]}
-    {else}
-        {assign var=refDB value=$doc->db[0]}
-    {/if}       
-    {assign var=refID value=$doc->id}
-{/if}
-
-{if $doc->type eq 'article'}
-TY  - JOUR
-{/if}
-{if $doc->type eq 'non-conventional'}
-TY  - GEN
-{/if}
-{if $doc->type eq 'book'}
+{if $doc->type == 'book'}
 TY  - BOOK
+{else}
+TY  - CHAP
 {/if}
-{foreach item=ti from=$doc->ti}
-T1  - {$ti}
-{/foreach}
-{if $doc->type eq 'article' AND $doc->ta > 0}
-JO  - {$doc->ta[0]}
-{/if}
-{if $doc->vi neq ''}
-VL  - {$doc->vi}
-{/if}
-{if $doc->ip neq ''}
-IS  - {$doc->ip}
-{/if}
-{foreach item=au from=$doc->au}
+TI  - {$doc->title}
+{foreach item=au from=$doc->author}
 AU  - {$au}
 {/foreach}
-DB  - {$refDB}
-DP  - http://www.bvsalud.org
-ID  - {$refID}
-LA  - {$doc->la[0]}
-{if $doc->pg > 0}
-{if $doc->pg[0]|contains:"-"}
-SP  - {$doc->pg[0]|substring_before:"-"}
-EP  - {$doc->pg[0]|substring_after:"-"}
-{else}
-SP  - {$doc->pg[0]}
-EP  - {$doc->pg[0]}
-{/if}
-{/if}
-{if $doc->da > 0}
-PY  - {$doc->da[0]|substr:0:4}
-{/if}
-{foreach item=mh from=$doc->mh}
-KW  - {$mh}
+{foreach item=ab from=$doc->synopsis}
+AB  - {$ab}
 {/foreach}
-{foreach item=ab from=$doc->ab}
-N2  - {$ab}
-{/foreach}
-{foreach item=ur from=$doc->ur}
-UR  - {$ur}
-{/foreach}
-ER  - 
+PB  - {$doc->publisher}
+{if $doc->isbn}
+SN  - {$doc->isbn}
+{/if}
+{if $doc->year}
+PY  - {$doc->year}
+{/if}
+{if $doc->language}
+LA  - {$doc->language}
+{/if}
+ER  -
 
 {/foreach}

@@ -14,7 +14,7 @@
     {* mostra linha com links para resumo e texto completo disponiveis para scielo *}
     {if $scieloLinkList|@count > 0}
         <div class="text_abstract">
-            <img src="./image/common/icon_scielo.gif" alt="SciELO"/>
+            <img src="./image/common/icon_scielo.gif"/>
             {$abstractFulltextList}
         </div>
     {/if}
@@ -22,7 +22,7 @@
     {* mostra linha com resumo e texto completo informadas no documento *}
     {if  $scieloLinkList|@count == 0 AND ($doc->ab|@count > 0 OR $fulltextLinkList|@count > 0)}
         <div class="text_abstract">
-            <a name="abs"><img src="./image/common/viewFullText.gif" alt="{$texts.FULLTEXT}" /></a>f
+            <a name="abs"><img src="./image/common/viewFullText.gif"/></a>
             {if  $doc->ab|@count > 0}
                 <span>
                     <a href="mobile/resources/{$doc->id}">{$texts.ABSTRACT_IN}
@@ -56,7 +56,7 @@
     {if isset($smarty.cookies.userTK)}
         <div class="scielo">
                 <a href="#">
-                    <img src="./image/common/icon_addToFolder.gif" alt="{$texts.ADD_TO_COLLECTION}"/>
+                    <img src="./image/common/icon_addToFolder.gif"/>
                     &#160;<span>{$texts.ADD_TO_COLLECTION}</span>
                 </a>
         </div>

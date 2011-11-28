@@ -1,53 +1,56 @@
 <?xml version="1.0"?>
 <dia_config>
-    <site>bvs</site>
-    <bvs_url>http://regional.bvsalud.org/</bvs_url>
-    <about_bvs_url>http://bvsmodelo.bvsalud.org/</about_bvs_url>
-    <home_url>http://regional.bvsalud.org/</home_url>
+    <site>scielobooks</site>
+    <bvs_url>http://www.bvs.br/</bvs_url>
+    <about_bvs_url>http://www.bvs.br/</about_bvs_url>
+    <home_url>http://www.bvs.br/</home_url>
+    <mobile_home_url>http://mbvs.mobi/</mobile_home_url>
     <search_server>localhost:8080</search_server>
-    <photocopy_url>http://scad.bvs.br/php/index.php?identificado=1</photocopy_url>
+    <log_dir>/tmp/</log_dir>
     <documents_per_page>10</documents_per_page>
     <default_lang>pt</default_lang>
-    <log_dir>logs/bvs/</log_dir>
-    <environment>test</environment>
-
+    <environment>homolog</environment>
+    <google_analytics_code></google_analytics_code>
+    <scielobooks>
+        <base_url>http://books.scielo.org</base_url>
+    </scielobooks>
     <search_collection_list>
         <collection>
-            <name>local</name>
+            <name>main</name>
             <cluster_items_limit>20</cluster_items_limit>
             <set></set>
-            <filter></filter>
+            <restriction>(is_public:true)</restriction>
             <index_list>
                 <index>
-                    <name>ALL</name>
-                    <prefix></prefix>
+                    <name>LBL_INDEX_ALL</name>
+                    <prefix>tw</prefix>
                 </index>
                 <index>
-                    <name>TI</name>
-                    <prefix>ti</prefix>
+                    <name>LBL_INDEX_TITLE</name>
+                    <prefix>title</prefix>
                 </index>
                 <index>
-                    <name>AU</name>
-                    <prefix>au</prefix>
+                    <name>LBL_INDEX_AUTHOR</name>
+                    <prefix>author</prefix>
                 </index>
                 <index>
-                    <name>MH</name>
-                    <prefix>mh_words</prefix>
+                    <name>LBL_INDEX_ISBN</name>
+                    <prefix>isbn</prefix>
                 </index>
-                <index>
-                    <name>PT</name>
-                    <prefix>pt</prefix>
-                </index>
-
             </index_list>
             <where_list>
                 <where>
-                    <name>ALL</name>
-                    <filter></filter>
+                    <default_for_empty_query>1</default_for_empty_query>
+                    <name>BOOK</name>
+                    <filter>book</filter>
                 </where>
                 <where>
-                    <name>LILACS</name>
-                    <filter>db:"LILACS"</filter>
+                    <name>PART</name>
+                    <filter>part</filter>
+                </where>
+                <where>
+                    <name>BOOK_PART</name>
+                    <filter></filter>
                 </where>
              </where_list>
              <sort_list>
@@ -58,21 +61,14 @@
                  <sort>
                      <default_for_empty_query>1</default_for_empty_query>
                      <name>YEAR_DESC</name>
-                     <value>da desc</value>
+                     <value>year desc</value>
                  </sort>
                  <sort>
                      <name>YEAR_ASC</name>
-                     <value>da asc</value>
+                     <value>year asc</value>
                  </sort>
              </sort_list>
-             <format_list>
-               <format>
-                 <name>summary</name>
-               </format>
-               <format>
-                 <name>simple</name>
-               </format>
-             </format_list>
         </collection>
     </search_collection_list>
 </dia_config>
+
