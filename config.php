@@ -1,5 +1,5 @@
 <?php
-    // funcao retirada da pagina http://www.php.net/utf8_encode 
+    // funcao retirada da pagina http://www.php.net/utf8_encode
     function isUTF8($string){
         if (is_array($string)) {
             $enc = implode('', $string);
@@ -42,9 +42,9 @@
             foreach( $colectionData->sort_list->sort as $sortItem  ){
                 // seleciona primeito item do config como default
                 if ( $count == 0){
-                    $sortValue = $sortItem->value;              
+                    $sortValue = $sortItem->value;
                 }
-                // caso a query esteja vazia verifica se o item possue default_for_empty_query  
+                // caso a query esteja vazia verifica se o item possue default_for_empty_query
                 if ( $q == '' && isset($sortItem->default_for_empty_query) ){
                     $sortValue = $sortItem->value;
                 }
@@ -66,12 +66,12 @@
             }
         }
     }
-    
+
 //=========================================================================================================
 
     $lang = "";
     $tag = "1.3.1";
-    
+
     // define constants
     define("VERSION", $tag);
     define("USE_SERVER_PATH", true);
@@ -81,24 +81,29 @@
     }else{
         $PATH = dirname(__FILE__).'/';
     }
-    
+
     $PATH_DATA = substr($PATH,strlen($_SERVER["DOCUMENT_ROOT"]));
     $PATH_DATA = str_replace('\\','/',$PATH_DATA);
 
     $config = simplexml_load_file('config/dia-config.xml');
 
     //idioma da interface
-    if(!isset($_REQUEST["lang"])) {
-        $_REQUEST["lang"] = $config->default_lang;
-    }   
-    $lang = $_REQUEST["lang"];
-    
+    if(!isset($_COOKIE["language"])) {
+        $_COOKIE['language'] = $config->default_lang;
+    }
+    if(isset($_REQUEST["lang"]) && $_REQUEST["lang"] !== $_COOKIE['language']){
+        setcookie("language", $_REQUEST["lang"], time()+3600);
+        $_COOKIE['language'] = $_REQUEST["lang"];
+    }
+    $lang = $_COOKIE['language'];
+
+
     $defaultCollectionData = $config->search_collection_list->collection[0];
 
     // verifica se existe apenas uma colecao definida no config.xml
     if ( !is_array($defaultCollectionData) ){
-        $defaultCollectionData = $config->search_collection_list->collection;   
-    }   
+        $defaultCollectionData = $config->search_collection_list->collection;
+    }
     $defaultCollection = $defaultCollectionData->name;
     $defaultSite = $defaultCollectionData->site;
 
