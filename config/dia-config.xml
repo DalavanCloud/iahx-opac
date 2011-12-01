@@ -10,13 +10,16 @@
     <documents_per_page>10</documents_per_page>
     <default_lang>pt</default_lang>
     <environment>homolog</environment>
-    <google_analytics_code>UA-624952-7</google_analytics_code>
+    <google_analytics>
+        <enabled>false</enabled> <!-- true | false -->
+        <id>UA-624952-7</id>
+    </google_analytics>
     <scielobooks>
-        <base_url>http://books.scielo.org</base_url>
+        <base_url>http://localhost:6543</base_url>
     </scielobooks>
     <search_collection_list>
         <collection>
-            <name>main</name>
+            <name></name>
             <cluster_items_limit>20</cluster_items_limit>
             <set></set>
             <restriction>(is_public:true)</restriction>

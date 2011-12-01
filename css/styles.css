@@ -24,12 +24,16 @@ HR{
 	margin: 0 auto;
 	background: url(../image/common/watermark.png) no-repeat scroll 140px 0;
 }
+DIV.parent {
+    float: left;
+    margin-right: 14px;
+}
 DIV.parent a {
-	background: url(../image/common/logo_SciELO.png) no-repeat;
+	background: url(../image/common/logo_SciELO-Books.png) no-repeat scroll 0 0 transparent;
+    width: 210px;
+    display: block;
 }
-div.identification {
-	background: url(../image/common/identification.png) no-repeat;
-}
+
 DIV.top {
 }
 DIV.identification H2 {
