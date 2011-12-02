@@ -1,9 +1,8 @@
-<?php
-    //session_start();
-    require_once('./config.php');
-    require_once('./classes/Dia.php');
-    require_once('./classes/Page.php');
-    require_once('./classes/Log.php');
+<?PHP
+    require_once("config.php");
+    require_once("./classes/Dia.php");
+    require_once("./classes/Page.php");
+    require_once("./classes/Log.php");
     require_once('./classes/smarty/Smarty.class.php');
 
     $col = $_REQUEST["col"];
@@ -13,18 +12,18 @@
     if ( !isset($col) ){
         $col = $defaultCollection;              // valor default criada no script de configuracao do sistema
     }
-    if ( !isset($site) ){   
+    if ( !isset($site) ){
         $site= $defaultSite;                    // valor default criada no script de configuracao do sistema
     }
 
     $from= ( isset($_REQUEST["from"]) && $_REQUEST["from"] != ''? $_REQUEST["from"] : 0 );
-    
+
     $q  = stripslashes($_REQUEST["q"]);         //query
-    
+
     if ($q == $texts['ENTER_WORDS']){
         $q = "";
-    }   
-    
+    }
+
     $qt = $_REQUEST["qt"];                      //query type
     $index= $_REQUEST["index"];
 
@@ -37,27 +36,30 @@
     $callback = $_REQUEST['callback'];          // append callback function to json output
 
     $media =  $_REQUEST["media"];               // media template: screen (default) or mobile
-        
+
     $filter = $_REQUEST["filter"];              //initial filter to apply
     $filterLabel = $_REQUEST["filterLabel"];    //initial filter label
-    
+
     $filter_chain = $_REQUEST["filter_chain"];  //user filter sequence (history)
     $addFilter = $_REQUEST["addfilter"];        //new filter to apply
     $backFilter= $_REQUEST["backfilter"];       //back to filter position
 
-    $where = $_REQUEST["where"];                            //select where search
-    $whereFilter = getWhereFilter($colectionData,$where);   //select where search
+    if (isset($_REQUEST["where"]) && $_REQUEST["where"] != ""){
+        $whereFilter = getWhereFilter($colectionData,$_REQUEST["where"]);   //select where search
+    }else{
+        $whereFilter = getDefaultWhere($colectionData, $q);     //get default where
+    }
+
     $count = ( isset($_REQUEST["count"]) ? $_REQUEST["count"] : $config->documents_per_page );
-    
+
     $fmt = $_REQUEST["fmt"];                                //display format
-    $history = $_REQUEST["history"];                        //search by history
 
     // create a array for CSA (custom search appearance) parameters
     $csa['bvs_logo'] = $_REQUEST["bvs_logo"];
     $csa['bvs_link'] = $_REQUEST["bvs_link"];
     $csa['banner_image'] = $_REQUEST["banner_image"];
     $csa['banner_text'] = $_REQUEST["banner_text"];
-    $csa['home_text'] = $_REQUEST["home_text"]; 
+    $csa['home_text'] = $_REQUEST["home_text"];
     $csa['home_url'] = $_REQUEST["home_url"];
     $csa['css'] = $_REQUEST["css"];
     $csa['display_banner'] = $_REQUEST["display_banner"];
@@ -80,14 +82,14 @@
                 $reduceFilter = array_slice($filter_chain,0,$backFilter+1);     //delete filter history to position
                 $filter_chain = $reduceFilter;
             }
-        }   
+        }
     }
 
     $debug = $_REQUEST['debug'];
     $detail = $_REQUEST['detail'];
 
     //DIA server connection object
-    $dia = new Dia($site, $col, $count, $output, $lang);    
+    $dia = new Dia($site, $col, $count, $output, $lang);
     $page= new Page();
 
     $initial_restricion = html_entity_decode($colectionData->restriction);
@@ -100,8 +102,33 @@
     $dia->setParam('qt',$qt);
     $dia->setParam('sort',$sort);
 
-    $diaResponse = $dia->search($q, $index, $filterSearch, $from);
-    $result = json_decode($diaResponse);
+    if($output == "ris"){
+
+        // create a loop for export all citation
+        header("Content-type: application/x-Research-Info-Systems; charset=UTF-8");
+        header('Content-Disposition: attachment; filename="citation.ris"');
+        // add BOM code
+        print(pack("CCC",0xef,0xbb,0xbf));
+
+        $export_count = '100';
+
+        $dia->setParam('count',$export_count);
+
+        $diaResponse = $dia->search($q, $index, $filterSearch, 0);
+        $result = json_decode($diaResponse);
+        $num_found = intval($result->diaServerResponse[0]->response->numFound);
+        $page->RIS();
+
+        for ($export_from = $export_count+1; $export_from <= $num_found; $export_from += $export_count){
+            $diaResponse = $dia->search($q, $index, $filterSearch, $export_from);
+            $result = json_decode($diaResponse);
+            $page->RIS();
+        }
+        die();
+    }else{
+        $diaResponse = $dia->search($q, $index, $filterSearch, $from);
+        $result = json_decode($diaResponse);
+    }
 
     if ($output == "xml" || $output == "sol"){
         header("Content-type: text/xml; charset=UTF-8");
@@ -119,23 +146,13 @@
         }else{
             echo $diaResponse;
         }
-    }else{      
+    }else{
         // html output
         $page->show();
     }
 
     flush();
-
-    //add to search history session
-    if ( !isset($history) && ($q != '' || $where != '' || $filterSearch[0] != '')){
-        $solr_query = ($result->diaServerResponse[0]->responseHeader->params->q != '*:*' ? $result->diaServerResponse[0]->responseHeader->params->q : '');
-        $solr_filter=  $result->diaServerResponse[0]->responseHeader->params->fq;
-        $solr_total =  $result->diaServerResponse[0]->response->numFound;
-
-        $_SESSION["search_history"][] = $solr_query . "|" . $solr_filter . "|" . $solr_total;
-    }
-
-    // add to search log file
+    // log de pesquisas realizadas
     $log = new Log();
     $log->fields['ip']   = $_SERVER["REMOTE_ADDR"];
     $log->fields['lang'] = $lang;

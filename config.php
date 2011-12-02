@@ -1,29 +1,29 @@
 <?php
-    // funcao retirada da pagina http://www.php.net/utf8_encode
-    function isUTF8($string){
-        if (is_array($string)) {
-            $enc = implode('', $string);
-            return @!((ord($enc[0]) != 239) && (ord($enc[1]) != 187) && (ord($enc[2]) != 191));
-        }else{
-            return (utf8_encode(utf8_decode($string)) == $string);
-        }
-    }
+	// funcao retirada da pagina http://www.php.net/utf8_encode
+	function isUTF8($string){
+    	if (is_array($string)) {
+        	$enc = implode('', $string);
+        	return @!((ord($enc[0]) != 239) && (ord($enc[1]) != 187) && (ord($enc[2]) != 191));
+    	}else{
+        	return (utf8_encode(utf8_decode($string)) == $string);
+    	}
+	}
 
-    function getWhereFilter($colectionData, $where){
-        $whereFilter = "";
-        if (isset($colectionData->where_list)){
-            foreach($colectionData->where_list->where as $whereOpt  ){
-                if ($whereOpt->name == $where){
-                    $whereFilter = $whereOpt->filter;
-                    break;
-                }
-            }
-        }
-        return html_entity_decode($whereFilter);
-    }
+	function getWhereFilter($colectionData, $where){
+		$whereFilter = "";
+		if (isset($colectionData->where_list)){
+			foreach($colectionData->where_list->where as $whereOpt  ){
+				if ($whereOpt->name == $where){
+					$whereFilter = $whereOpt->filter;
+					break;
+				}
+			}
+		}
+		return html_entity_decode($whereFilter);
+	}
 
-    function getSortValue($colectionData, $sort){
-        $whereFilter = "";
+	function getSortValue($colectionData, $sort){
+		$whereFilter = "";
         if ( isset($colectionData->sort_list) ){
             foreach( $colectionData->sort_list->sort as $sortItem  ){
                 if ($sortItem->name == $sort || $sortItem->value == $sort){
@@ -32,27 +32,48 @@
                 }
             }
         }
-        return urlencode($sortValue);
-    }
+		return urlencode($sortValue);
+	}
 
     function getDefaultSort($colectionData, $q){
-        $sortValue = "";
-        $count = 0;
+		$sortValue = "";
+		$count = 0;
         if ( isset($colectionData->sort_list) ){
             foreach( $colectionData->sort_list->sort as $sortItem  ){
-                // seleciona primeito item do config como default
-                if ( $count == 0){
-                    $sortValue = $sortItem->value;
-                }
-                // caso a query esteja vazia verifica se o item possue default_for_empty_query
+            	// seleciona primeito item do config como default
+            	if ( $count == 0){
+            		$sortValue = $sortItem->value;
+            	}
+            	// caso a query esteja vazia verifica se o item possue default_for_empty_query
                 if ( $q == '' && isset($sortItem->default_for_empty_query) ){
-                    $sortValue = $sortItem->value;
-                }
-                $count++;
+    				$sortValue = $sortItem->value;
+        		}
+        		$count++;
             }
         }
-        return urlencode($sortValue);
-    }
+		return urlencode($sortValue);
+	}
+
+    function getDefaultWhere($colectionData, $q){
+		$whereValue = "";
+		$count = 0;
+        if ( isset($colectionData->where_list) ){
+            foreach( $colectionData->where_list->where as $whereItem  ){
+            	// seleciona primeito item do config como default
+            	if ( $count == 0){
+            		$whereValue = $whereItem->filter;
+            	}
+            	// caso a query esteja vazia verifica se o item possue default_for_empty_query
+                if ( $q == '' && isset($whereItem->default_for_empty_query) ){
+    				$whereValue = $whereItem->filter;
+        		}
+        		$count++;
+            }
+        }
+		return urlencode($whereValue);
+	}
+
+
     // function to work when PHP directive magic_quotes_gpc is OFF
     function addslashes_array($a){
         if(is_array($a)){
@@ -67,103 +88,96 @@
         }
     }
 
-//=========================================================================================================
-
-    $lang = "";
+	//=========================================================================================================
+	$lang = "";
     $tag = "1.3.1";
+	$rev = "-rev$Rev.186";
+	// define constants
+	define("VERSION", $tag . $rev);
+	define("USE_SERVER_PATH", true);
 
-    // define constants
-    define("VERSION", $tag);
-    define("USE_SERVER_PATH", true);
+	if (USE_SERVER_PATH == true){
+		$PATH = dirname($_SERVER["PATH_TRANSLATED"]);
+	}else{
+		$PATH = dirname(__FILE__).'/';
+	}
 
-    if (USE_SERVER_PATH == true){
-        $PATH = dirname($_SERVER["PATH_TRANSLATED"]);
-    }else{
-        $PATH = dirname(__FILE__).'/';
-    }
+	$PATH_DATA = substr($PATH,strlen($_SERVER["DOCUMENT_ROOT"]));
+	$PATH_DATA = str_replace('\\','/',$PATH_DATA);
 
-    $PATH_DATA = substr($PATH,strlen($_SERVER["DOCUMENT_ROOT"]));
-    $PATH_DATA = str_replace('\\','/',$PATH_DATA);
+	$config = simplexml_load_file('config/dia-config.xml');
 
-    $config = simplexml_load_file('config/dia-config.xml');
+	//idioma da interface
+	if(!isset($_REQUEST["lang"])) {
+		$_REQUEST["lang"] = $config->default_lang;
+	}
+	$lang = $_REQUEST["lang"];
 
-    //idioma da interface
-    if(!isset($_COOKIE["language"])) {
-        $_COOKIE['language'] = $config->default_lang;
-    }
-    if(isset($_REQUEST["lang"]) && $_REQUEST["lang"] !== $_COOKIE['language']){
-        setcookie("language", $_REQUEST["lang"], time()+3600);
-        $_COOKIE['language'] = $_REQUEST["lang"];
-    }
-    $lang = $_COOKIE['language'];
+	$defaultCollectionData = $config->search_collection_list->collection[0];
 
+	// verifica se existe apenas uma colecao definida no config.xml
+	if ( !is_array($defaultCollectionData) ){
+		$defaultCollectionData = $config->search_collection_list->collection;
+	}
+	$defaultCollection = $defaultCollectionData->name;
+	$defaultSite = $defaultCollectionData->site;
 
-    $defaultCollectionData = $config->search_collection_list->collection[0];
+	if ($defaultSite == ""){
+		$defaultSite = $config->site;
+	}
 
-    // verifica se existe apenas uma colecao definida no config.xml
-    if ( !is_array($defaultCollectionData) ){
-        $defaultCollectionData = $config->search_collection_list->collection;
-    }
-    $defaultCollection = $defaultCollectionData->name;
-    $defaultSite = $defaultCollectionData->site;
+	//security check
+	if (!ereg("^[a-zA-Z\-]{2,5}",$lang))
+		die("invalid parameter lang" . $lang);
 
-    if ($defaultSite == ""){
-        $defaultSite = $config->site;
-    }
+	$texts = parse_ini_file("./languages/" . $lang . "/texts.ini", true);					// interface texts
+	$logDir = ( isset( $config->log_dir ) ? $config->log_dir : "logs/");
 
-    //security check
-    if (preg_match('/^[a-zA-Z\-]{2,5}$/',$lang) == 0)
-        die("invalid parameter lang" . $lang);
+	//environment variables
+	$config["PATH_DATA"] = $PATH_DATA;
+	$config["DOCUMENT_ROOT"] = $_SERVER["DOCUMENT_ROOT"];
+	$config["SERVERNAME"] = $_SERVER["HTTP_HOST"];
 
-    $texts = parse_ini_file("./languages/" . $lang . "/texts.ini", true);                   // interface texts
-    $logDir = ( isset( $config->log_dir ) ? $config->log_dir : "logs/");
+	define("SERVERNAME", $config["SERVERNAME"]);
+	define("PATH_DATA" , $config["PATH_DATA"]);
+	define("DOCUMENT_ROOT", $config["DOCUMENT_ROOT"]);
+	define("APP_PATH", $config["DOCUMENT_ROOT"] . $config["PATH_DATA"]);
 
-    //environment variables
-    $config["PATH_DATA"] = $PATH_DATA;
-    $config["DOCUMENT_ROOT"] = $_SERVER["DOCUMENT_ROOT"];
-    $config["SERVERNAME"] = $_SERVER["HTTP_HOST"];
+	define('LOG_DIR', $logDir);
+	define('LOG_FILE',"log" . date('Ymd') . "_search.txt");
 
-    define("SERVERNAME", $config["SERVERNAME"]);
-    define("PATH_DATA" , $config["PATH_DATA"]);
-    define("DOCUMENT_ROOT", $config["DOCUMENT_ROOT"]);
-    define("APP_PATH", $config["DOCUMENT_ROOT"] . $config["PATH_DATA"]);
+	// verifica se exitem acentos codificados em ISO nos parâmetros de entrada (q, filter e filterLabel)
+	if (!isUTF8($_REQUEST["q"])){
+		$_REQUEST["q"] = utf8_encode($_REQUEST["q"]);
+	}
+	if (!isUTF8($_REQUEST["filter"])){
+		$_REQUEST["filter"] = utf8_encode($_REQUEST["filter"]);
+	}
+	if (!isUTF8($_REQUEST["filterLabel"])){
+		$_REQUEST["filterLabel"] = utf8_encode($_REQUEST["filterLabel"]);
+	}
 
-    define('LOG_DIR', $logDir);
-    define('LOG_FILE',"log" . date('Ymd') . "_search.txt");
-
-    // verifica se exitem acentos codificados em ISO nos parâmetros de entrada (q, filter e filterLabel)
-    if (!isUTF8($_REQUEST["q"])){
-        $_REQUEST["q"] = utf8_encode($_REQUEST["q"]);
-    }
-    if (!isUTF8($_REQUEST["filter"])){
-        $_REQUEST["filter"] = utf8_encode($_REQUEST["filter"]);
-    }
-    if (!isUTF8($_REQUEST["filterLabel"])){
-        $_REQUEST["filterLabel"] = utf8_encode($_REQUEST["filterLabel"]);
-    }
-
-    // seta variavel colectionData com a configuracao da colecao atual
-    if ($_REQUEST['col'] != ''){
-        for ($c = 0; $c < count($config->search_collection_list->collection); $c++){
-            $colName = $config->search_collection_list->collection[$c]->name;
-            $colSite = $config->search_collection_list->collection[$c]->site;
-            if (!isset($colSite) || $colSite == ''){
-                $colSite = $defaultSite;
-            }
-            if ($_REQUEST['col'] == $colName ){
-                if ( isset($_REQUEST['site']) ) {
-                    if ($_REQUEST['site'] == $colSite ){
-                        $colectionData = $config->search_collection_list->collection[$c];
-                        break;
-                    }
-                }else if ($colSite == $defaultSite){
-                    $colectionData = $config->search_collection_list->collection[$c];
-                    break;
-                }
-            }
-        }
-    }
-    if (!isset($colectionData)){
-        $colectionData = $defaultCollectionData;
-    }
-?>
+	// seta variavel colectionData com a configuracao da colecao atual
+	if ($_REQUEST['col'] != ''){
+		for ($c = 0; $c < count($config->search_collection_list->collection); $c++){
+			$colName = $config->search_collection_list->collection[$c]->name;
+			$colSite = $config->search_collection_list->collection[$c]->site;
+			if (!isset($colSite) || $colSite == ''){
+				$colSite = $defaultSite;
+			}
+			if ($_REQUEST['col'] == $colName ){
+				if ( isset($_REQUEST['site']) ) {
+					if ($_REQUEST['site'] == $colSite ){
+						$colectionData = $config->search_collection_list->collection[$c];
+						break;
+					}
+				}else if ($colSite == $defaultSite){
+					$colectionData = $config->search_collection_list->collection[$c];
+					break;
+				}
+			}
+		}
+	}
+	if (!isset($colectionData)){
+		$colectionData = $defaultCollectionData;
+	}
